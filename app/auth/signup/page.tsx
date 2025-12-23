@@ -3,10 +3,30 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '@/lib/stores/authStore';
 import { Animated, AnimatedInput, AnimatedButton } from '@/components/ui/animated';
+import type { User } from '@supabase/supabase-js';
+
+type SignupResponse =
+  | { error: string }
+  | {
+      success: true;
+      user: {
+        id: string;
+        email: string | undefined;
+        created_at: string;
+        email_confirmed_at: string | null;
+      };
+      session: { expires_at: number } | null;
+      requiresEmailConfirmation: boolean;
+      message: string;
+    };
 
 export default function SignupPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,10 +61,10 @@ export default function SignupPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as SignupResponse;
 
-      if (!response.ok) {
-        setError(data.error || 'Signup failed');
+      if (!response.ok || 'error' in data) {
+        setError('error' in data ? data.error : 'Signup failed');
         setLoading(false);
         return;
       }
@@ -53,6 +73,35 @@ export default function SignupPage() {
       
       // If user is automatically signed in (email confirmation disabled), redirect to dashboard
       if (data.session) {
+        // Clear all React Query cache completely to ensure fresh data
+        queryClient.clear();
+        
+        // Update auth store with user data if available
+        if (data.user) {
+          const user = {
+            id: data.user.id,
+            email: data.user.email,
+            created_at: data.user.created_at,
+            // Add other required User fields with defaults
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            confirmation_sent_at: undefined,
+            recovery_sent_at: undefined,
+            email_change_sent_at: undefined,
+            new_email: undefined,
+            invited_at: undefined,
+            action_link: undefined,
+            email_confirmed_at: data.user.email_confirmed_at,
+            phone_confirmed_at: undefined,
+            confirmed_at: data.user.email_confirmed_at || data.user.created_at,
+            last_sign_in_at: new Date().toISOString(),
+            role: 'authenticated',
+            updated_at: new Date().toISOString(),
+          } as unknown as User;
+          setUser(user);
+        }
+        
         setTimeout(() => {
           router.push('/dashboard');
           router.refresh();
@@ -66,7 +115,7 @@ export default function SignupPage() {
           router.push('/auth/login');
         }, 4000);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError('An error occurred. Please try again.');
       setLoading(false);
     }

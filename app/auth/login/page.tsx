@@ -4,11 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '@/lib/stores/authStore';
 import { Animated, AnimatedInput, AnimatedButton } from '@/components/ui/animated';
+import type { User } from '@supabase/supabase-js';
 
 export default function LoginPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -36,8 +39,38 @@ export default function LoginPage() {
         return;
       }
 
-      // Invalidate all queries to ensure fresh data is fetched for the new user
-      queryClient.invalidateQueries();
+      // Clear all React Query cache completely to prevent showing previous user's data
+      // This is critical when switching between users
+      queryClient.clear();
+      
+      // Update auth store with user data if available
+      // Construct a minimal User object from the response
+      if (data.user) {
+        const user = {
+          id: data.user.id,
+          email: data.user.email,
+          created_at: data.user.created_at,
+          // Add other required User fields with defaults
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          confirmation_sent_at: undefined,
+          recovery_sent_at: undefined,
+          email_change_sent_at: undefined,
+          new_email: undefined,
+          invited_at: undefined,
+          action_link: undefined,
+          email_confirmed_at: data.user.created_at,
+          phone_confirmed_at: undefined,
+          confirmed_at: data.user.created_at,
+          last_sign_in_at: new Date().toISOString(),
+          role: 'authenticated',
+          updated_at: new Date().toISOString(),
+        } as unknown as User;
+        setUser(user);
+      }
+
+      // Navigate to dashboard and refresh to ensure fresh data is fetched
       router.push('/dashboard');
       router.refresh();
     } catch (err) {
