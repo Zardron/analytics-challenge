@@ -1,5 +1,19 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '@/lib/database.types';
+import { validateEnvironmentVariables } from '@/lib/utils/env';
+
+// Validate environment variables on module load (client-side)
+if (typeof window !== 'undefined') {
+  try {
+    validateEnvironmentVariables();
+  } catch (error) {
+    console.error('Environment variable validation failed:', error);
+    // In production, this should fail fast, but in development we can be more lenient
+    if (process.env.NODE_ENV === 'production') {
+      throw error;
+    }
+  }
+}
 
 export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -9,13 +23,6 @@ export function createClient() {
     throw new Error(
       'Missing Supabase environment variables. Please check your .env.local file.'
     );
-  }
-
-  // Validate URL format
-  try {
-    new URL(supabaseUrl);
-  } catch {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL must be a valid URL');
   }
 
   return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);

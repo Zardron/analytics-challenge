@@ -1,6 +1,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/lib/database.types';
+import { validateEnvironmentVariables } from '@/lib/utils/env';
+
+// Validate environment variables on module load (server-side)
+try {
+  validateEnvironmentVariables();
+} catch (error) {
+  console.error('Environment variable validation failed:', error);
+  // In production, this should fail fast
+  if (process.env.NODE_ENV === 'production') {
+    throw error;
+  }
+}
 
 export async function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,13 +22,6 @@ export async function createClient() {
     throw new Error(
       'Missing Supabase environment variables. Please check your .env.local file.'
     );
-  }
-
-  // Validate URL format
-  try {
-    new URL(supabaseUrl);
-  } catch {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL must be a valid URL');
   }
 
   const cookieStore = await cookies();
