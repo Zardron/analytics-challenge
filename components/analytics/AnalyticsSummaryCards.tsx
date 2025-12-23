@@ -1,5 +1,7 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import { Animated } from '@/components/ui/animated';
 import { useAnalyticsSummary } from '@/lib/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -92,63 +94,92 @@ export function AnalyticsSummaryCards() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card) => {
+      {cards.map((card, index) => {
         const Icon = card.icon;
         const isTopPost = (card as any).isTopPost;
         const showTrendInline = (card as any).showTrendInline;
         return (
-          <Card key={card.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6">
-              <CardTitle className="text-sm font-medium">
-                {card.title}
-              </CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="px-6">
-              {isTopPost ? (
-                <>
-                  <div className="text-base font-semibold leading-tight mb-2">
-                    {card.value}
-                  </div>
-                  <CardDescription className="text-xs">
-                    {card.description}
-                  </CardDescription>
-                </>
-              ) : showTrendInline ? (
-                <>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="text-2xl font-bold">{card.value}</div>
-                    {card.change !== undefined && (
-                      <div
-                        className={cn(
-                          'flex items-center',
-                          card.change >= 0
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-red-600 dark:text-red-400'
-                        )}
-                      >
-                        {card.change >= 0 ? (
-                          <TrendingUp className="h-4 w-4" />
-                        ) : (
-                          <TrendingDown className="h-4 w-4" />
-                        )}
+          <motion.div
+            key={card.title}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{
+              delay: index * 0.1,
+              duration: 0.4,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            whileHover={{ 
+              y: -4,
+              transition: { duration: 0.2 }
+            }}
+          >
+            <Card className="h-full transition-shadow duration-300 hover:shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6">
+                <CardTitle className="text-sm font-medium">
+                  {card.title}
+                </CardTitle>
+                <motion.div
+                  whileHover={{ scale: 1.2, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <Icon className="h-4 w-4 text-muted-foreground" />
+                </motion.div>
+              </CardHeader>
+              <CardContent className="px-6">
+                {isTopPost ? (
+                  <>
+                    <Animated type="fadeIn" delay={index * 0.1 + 0.3}>
+                      <div className="text-base font-semibold leading-tight mb-2">
+                        {card.value}
                       </div>
-                    )}
-                  </div>
-                  <CardDescription className="text-xs">
-                    {card.description}
-                  </CardDescription>
-                </>
-              ) : (
-                <>
-                  <div className="text-2xl font-bold">{card.value}</div>
-                  <CardDescription className="text-xs mt-1">
-                    {card.description}
-                  </CardDescription>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                    </Animated>
+                    <CardDescription className="text-xs">
+                      {card.description}
+                    </CardDescription>
+                  </>
+                ) : showTrendInline ? (
+                  <>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Animated type="scale" delay={index * 0.1 + 0.3}>
+                        <div className="text-2xl font-bold">{card.value}</div>
+                      </Animated>
+                      {card.change !== undefined && (
+                        <motion.div
+                          className={cn(
+                            'flex items-center',
+                            card.change >= 0
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-red-600 dark:text-red-400'
+                          )}
+                          initial={{ opacity: 0, scale: 0 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.1 + 0.4, type: "spring" }}
+                        >
+                          {card.change >= 0 ? (
+                            <TrendingUp className="h-4 w-4" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4" />
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
+                    <CardDescription className="text-xs">
+                      {card.description}
+                    </CardDescription>
+                  </>
+                ) : (
+                  <>
+                    <Animated type="scale" delay={index * 0.1 + 0.3}>
+                      <div className="text-2xl font-bold">{card.value}</div>
+                    </Animated>
+                    <CardDescription className="text-xs mt-1">
+                      {card.description}
+                    </CardDescription>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         );
       })}
     </div>

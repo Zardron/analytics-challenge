@@ -1,5 +1,7 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import { Animated } from '@/components/ui/animated';
 import { PostsTable } from './PostsTable';
 import { usePosts } from '@/lib/hooks';
 import { useUIStore } from '@/lib/stores';
@@ -87,69 +89,82 @@ export function PostsTableWithFilters() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Posts</CardTitle>
-            <CardDescription>
-              {posts?.length || 0} {posts?.length === 1 ? 'post' : 'posts'} found
-            </CardDescription>
-          </div>
-          <Button
-            onClick={() => refetch()}
-            variant="outline"
-            size="sm"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-        </div>
-        <div className="flex gap-2 mt-4 flex-wrap">
-          <Select
-            value={platformFilter}
-            onValueChange={(value) => setPlatformFilter(value as 'instagram' | 'tiktok' | 'all')}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Platform" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Platforms</SelectItem>
-              <SelectItem value="instagram">Instagram</SelectItem>
-              <SelectItem value="tiktok">TikTok</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={mediaTypeFilter}
-            onValueChange={(value) => setMediaTypeFilter(value as 'image' | 'video' | 'carousel' | 'all')}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Media Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="image">Image</SelectItem>
-              <SelectItem value="video">Video</SelectItem>
-              <SelectItem value="carousel">Carousel</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {hasActiveFilters && (
-            <Button
-              onClick={resetFilters}
-              variant="outline"
-              size="sm"
+    <Animated type="fadeInUp" delay={0.1}>
+      <Card className="transition-shadow duration-300 hover:shadow-lg">
+        <CardHeader>
+          <Animated type="fadeIn" delay={0.2}>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Posts</CardTitle>
+                <CardDescription>
+                  {posts?.length || 0} {posts?.length === 1 ? 'post' : 'posts'} found
+                </CardDescription>
+              </div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  onClick={() => refetch()}
+                  variant="outline"
+                  size="sm"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Refresh
+                </Button>
+              </motion.div>
+            </div>
+          </Animated>
+          <Animated type="slideUp" delay={0.3}>
+            <div className="flex gap-2 mt-4 flex-wrap">
+            <Select
+              value={platformFilter}
+              onValueChange={(value) => setPlatformFilter(value as 'instagram' | 'tiktok' | 'all')}
             >
-              Clear Filters
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <PostsTable data={posts || []} isLoading={isLoading} />
-      </CardContent>
-    </Card>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Platform" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Platforms</SelectItem>
+                <SelectItem value="instagram">Instagram</SelectItem>
+                <SelectItem value="tiktok">TikTok</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={mediaTypeFilter}
+              onValueChange={(value) => setMediaTypeFilter(value as 'image' | 'video' | 'carousel' | 'all')}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Media Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="image">Image</SelectItem>
+                <SelectItem value="video">Video</SelectItem>
+                <SelectItem value="carousel">Carousel</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && (
+              <Animated type="scale" delay={0.4}>
+                <Button
+                  onClick={resetFilters}
+                  variant="outline"
+                  size="sm"
+                >
+                  Clear Filters
+                </Button>
+              </Animated>
+            )}
+            </div>
+          </Animated>
+        </CardHeader>
+        <CardContent>
+          <PostsTable data={posts || []} isLoading={isLoading} />
+        </CardContent>
+      </Card>
+    </Animated>
   );
 }
 

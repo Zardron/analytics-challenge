@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { Animated } from '@/components/ui/animated';
 import { useDailyMetrics } from '@/lib/hooks';
 import { useUIStore } from '@/lib/stores';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -195,40 +197,48 @@ function EngagementChartInner({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Engagement Trends
-            </CardTitle>
-            <CardDescription className="mt-1">
-              Engagement (likes + comments + shares) over the last {days} days
-            </CardDescription>
+    <Animated type="fadeInUp" delay={0.1}>
+      <Card className="transition-shadow duration-300 hover:shadow-lg">
+        <CardHeader>
+          <Animated type="fadeIn" delay={0.2}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <motion.div
+                    animate={{ rotate: [0, -10, 10, -10, 0] }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                  >
+                    <TrendingUp className="h-5 w-5" />
+                  </motion.div>
+                  Engagement Trends
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Engagement (likes + comments + shares) over the last {days} days
+                </CardDescription>
+              </div>
+            <div className="inline-flex items-center rounded-lg border border-border p-1 bg-muted/50">
+              <Button
+                variant={chartViewType === 'line' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-8 px-3"
+                onClick={() => setChartViewType('line')}
+              >
+                Line Chart
+              </Button>
+              <Button
+                variant={chartViewType === 'area' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-8 px-3"
+                onClick={() => setChartViewType('area')}
+              >
+                Area Chart
+              </Button>
+            </div>
           </div>
-          <div className="inline-flex items-center rounded-lg border border-border p-1 bg-muted/50">
-            <Button
-              variant={chartViewType === 'line' ? 'default' : 'ghost'}
-              size="sm"
-              className="h-8 px-3"
-              onClick={() => setChartViewType('line')}
-            >
-              Line Chart
-            </Button>
-            <Button
-              variant={chartViewType === 'area' ? 'default' : 'ghost'}
-              size="sm"
-              className="h-8 px-3"
-              onClick={() => setChartViewType('area')}
-            >
-              Area Chart
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="overflow-hidden">
-        <div className="w-full overflow-hidden" style={{ height: 400, position: 'relative' }}>
+        </Animated>
+        </CardHeader>
+        <CardContent className="overflow-hidden">
+        <Animated type="fadeIn" delay={0.3} className="w-full overflow-hidden" style={{ height: 400, position: 'relative' }}>
           <svg 
             width={width}
             height={height}
@@ -439,7 +449,7 @@ function EngagementChartInner({
               </div>
             </TooltipWithBounds>
           )}
-        </div>
+        </Animated>
 
         {/* Legend */}
         <div className="flex items-center justify-center gap-6 pt-4 border-t">
@@ -453,6 +463,7 @@ function EngagementChartInner({
         </div>
       </CardContent>
     </Card>
+    </Animated>
   );
 }
 
