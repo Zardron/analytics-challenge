@@ -1,12 +1,13 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import type { Database } from '@/lib/database.types';
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -33,18 +34,69 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/api')
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  let user = null;
+  try {
+    const {
+      data: { user: fetchedUser },
+    } = await supabase.auth.getUser();
+    user = fetchedUser;
+  } catch (error) {
+    // If there's an error getting the user (e.g., database connection issues),
+    // allow auth routes to proceed, but protect other routes
+    console.error('Error getting user in middleware:', error);
+    
+    const pathname = request.nextUrl.pathname;
+    const isAuthRoute = pathname.startsWith('/auth');
+    const isPublicApiRoute = pathname.startsWith('/api/auth');
+    
+    // Allow auth routes and public API routes to proceed
+    if (isAuthRoute || isPublicApiRoute) {
+      return supabaseResponse;
+    }
+    
+    // For protected API routes, return 401
+    if (pathname.startsWith('/api')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // For pages, redirect to login
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
+    return NextResponse.redirect(url);
+  }
+
+  const pathname = request.nextUrl.pathname;
+  const isAuthRoute = pathname.startsWith('/auth');
+  const isPublicApiRoute = pathname.startsWith('/api/auth');
+  
+  // If no user and trying to access protected routes
+  if (!user) {
+    // Allow auth routes (login, signup) to proceed
+    if (isAuthRoute || isPublicApiRoute) {
+      return supabaseResponse;
+    }
+    
+    // For protected API routes, return 401
+    if (pathname.startsWith('/api')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // For protected pages, redirect to login
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/login';
+    return NextResponse.redirect(url);
+  }
+  
+  // If user is authenticated and trying to access auth pages, redirect to dashboard
+  if (isAuthRoute && !isPublicApiRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 

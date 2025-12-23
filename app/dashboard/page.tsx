@@ -1,20 +1,14 @@
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { requireAuthForPage } from '@/lib/utils/validation';
+import { DashboardContent } from '@/components/dashboard/DashboardContent';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 export default async function DashboardPage() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect('/auth/login');
-  }
+  const user = await requireAuthForPage();
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      <p className="text-gray-600">Welcome to your analytics dashboard!</p>
-      {/* TODO: Add dashboard content */}
-    </div>
+    <DashboardLayout userEmail={user.email}>
+      <DashboardContent />
+    </DashboardLayout>
   );
 }
 
